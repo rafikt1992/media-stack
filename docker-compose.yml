@@ -3,19 +3,19 @@ name: media-stack
 services:
 
   # To use/enable VPN, Run this compose file with --profile=vpn. Its highly recommended to use VPN.
-  vpn:
-    ## Read https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers for details on configuring VPN for your service provider.
-    profiles: ["vpn"]
-    container_name: vpn
-    image: qmcgaw/gluetun:v3.39.1
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - VPN_SERVICE_PROVIDER=protonvpn # Valid values: nordvpn, expressvpn, protonvpn, surfshark or custom
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY=gKju2ZmaE1Jl1dxBFVD03ogCmxqH4URExjoPj5s/3U4=
-      - SERVER_COUNTRIES=Netherlands
-      - FREE_ONLY=on
+  # vpn:
+  #   ## Read https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers for details on configuring VPN for your service provider.
+  #   profiles: ["vpn"]
+  #   container_name: vpn
+  #   image: qmcgaw/gluetun:v3.39.1
+  #   cap_add:
+  #     - NET_ADMIN
+  #   environment:
+  #     - VPN_SERVICE_PROVIDER=protonvpn # Valid values: nordvpn, expressvpn, protonvpn, surfshark or custom
+  #     - VPN_TYPE=wireguard
+  #     - WIREGUARD_PRIVATE_KEY=gKju2ZmaE1Jl1dxBFVD03ogCmxqH4URExjoPj5s/3U4=
+  #     - SERVER_COUNTRIES=Netherlands
+  #     - FREE_ONLY=on
 
       ## For list of server countries, visit https://raw.githubusercontent.com/qdm12/gluetun/master/internal/storage/servers.json
       ## When VPN_SERVICE_PROVIDER is custom. Comment the below line
@@ -41,56 +41,75 @@ services:
     # volumes:
       # - /yourpath/yourconfig.conf:/gluetun/config.conf:ro
 
-    networks:
-      - mynetwork
+    # networks:
+    #   - mynetwork
 
-    devices:
-      - /dev/net/tun:/dev/net/tun
+    # devices:
+    #   - /dev/net/tun:/dev/net/tun
       
     # Uncomment/enable below ports if VPN is used/enabled
-    ports:
-      # qbittorrent ports
-      - 5080:5080
-      - 6881:6881
-      - 6881:6881/udp
-      # prowlarr ports
-      - 9696:9696
-    restart: "unless-stopped"
+    # ports:
+    #   # qbittorrent ports
+    #   - 5080:5080
+    #   - 6881:6881
+    #   - 6881:6881/udp
+    #   # prowlarr ports
+    #   - 9696:9696
+    # restart: "unless-stopped"
 
   ## Default credentials of qBittorrent - Username: admin password: adminadmin ##
   ## Change password after install from UI --> Tools --> Options --> WebUI ##
-  qbittorrent:
-    profiles: ["vpn", "no-vpn"]
-    container_name: qbittorrent
-    image: lscr.io/linuxserver/qbittorrent:5.0.2
+  # qbittorrent:
+  #   profiles: ["vpn", "no-vpn"]
+  #   container_name: qbittorrent
+  #   image: lscr.io/linuxserver/qbittorrent:5.0.2
 
-    # Unomment below if vpn is enabled
-    depends_on:               # Uncomment this line if vpn is enabled
-      vpn:                   # Uncomment this line if vpn is enabled
-        condition: service_healthy # Uncomment this line if vpn is enabled
+  #   # Unomment below if vpn is enabled
+  #   depends_on:               # Uncomment this line if vpn is enabled
+  #     vpn:                   # Uncomment this line if vpn is enabled
+  #       condition: service_healthy # Uncomment this line if vpn is enabled
 
-    # Comment below lines if VPN is enabled
-    # networks:               # Comment this line if vpn is enabled
-    #   - mynetwork           # Comment this line if vpn is enabled
+  #   # Comment below lines if VPN is enabled
+  #   # networks:               # Comment this line if vpn is enabled
+  #   #   - mynetwork           # Comment this line if vpn is enabled
 
-    # Unomment below line if vpn is enabled
-    network_mode: service:vpn
+  #   # Unomment below line if vpn is enabled
+  #   network_mode: service:vpn
 
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=UTC
-      - WEBUI_PORT=5080
-    volumes:
-      - qbittorrent-config:/config
-      - torrent-downloads:/downloads
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=CET
+  #     - WEBUI_PORT=5080
+  #   volumes:
+  #     - qbittorrent-config:/config
+  #     - torrent-downloads:/downloads
 
     ## Comment/Disable below ports if VPN is enabled
     # ports:
     #   - 5080:5080
     #   - 6881:6881
     #   - 6881:6881/udp
-    restart: "unless-stopped"
+    # restart: "unless-stopped"
+
+  sabnzbd:
+    profiles: ["vpn", "no-vpn"]
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    networks:     
+      mynetwork:
+        ipv4_address: 172.21.0.10
+    volumes:
+      - sabnzbd-config:/config
+      - /mnt/qbittorrent:/downloads #optional
+      - /mnt/qbittorrent:/incomplete-downloads #optional
+    ports:
+      - 8085:8080
+    restart: unless-stopped
 
   radarr:
     profiles: ["vpn", "no-vpn"]
@@ -104,7 +123,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=UTC
+      - TZ=CET
     ports:
       - 7878:7878
     volumes:
@@ -114,7 +133,7 @@ services:
 
   sonarr:
     profiles: ["vpn", "no-vpn"]
-    image: linuxserver/sonarr:4.0.11
+    image: linuxserver/sonarr:latest
     container_name: sonarr
     networks:
       # - mynetwork   # Comment this line if VPN is enabled
@@ -127,7 +146,7 @@ services:
       - TZ=UTC
     volumes:
       - sonarr-config:/config
-      - torrent-downloads:/downloads
+      - /mnt/qbittorrent:/downloads
     ports:
       - 8989:8989
     restart: unless-stopped
@@ -135,26 +154,28 @@ services:
   prowlarr:
     profiles: ["vpn", "no-vpn"]
     container_name: prowlarr
-    image: linuxserver/prowlarr:1.27.0
+    image: linuxserver/prowlarr:latest
 
     # Uncomment below if vpn is enabled
-    depends_on:               # Uncomment this line if vpn is enabled
-      vpn:                   # Uncomment this line if vpn is enabled
-        condition: service_healthy # Uncomment this line if vpn is enabled
-    network_mode: service:vpn # Uncomment this line if vpn is enabled
-
-    # networks:               # Comment this line if vpn is enabled
-      # - mynetwork           # Comment this line if vpn is enabled
+    # depends_on:               # Uncomment this line if vpn is enabled
+    #   vpn:                   # Uncomment this line if vpn is enabled
+    #     condition: service_healthy # Uncomment this line if vpn is enabled
+    # network_mode: service:vpn # Uncomment this line if vpn is enabled
+    networks:
+      # - mynetwork   # Comment this line if VPN is enabled
+    ## Uncomment below lines if VPN is enabled
+      mynetwork:
+        ipv4_address: 172.21.0.11  # It should be available IPv4 address in range of docker network `mynetwork` e.g. 172.20.0.2
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=UTC
+      - TZ=CET
     volumes:
       - prowlarr-config:/config
 
     # Comment below ports if VPN is enabled.
-    # ports:
-      # - 9696:9696
+    ports:
+      - 9696:9696
     restart: unless-stopped
 
   jellyseerr:
@@ -166,7 +187,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=UTC
+      - TZ=CET
     volumes:
       - jellyseerr-config:/app/config
     ports:
@@ -182,10 +203,10 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=UTC
+      - TZ=CET
     volumes:
       - jellyfin-config:/config
-      - torrent-downloads:/data
+      - /mnt/qbittorrent:/data
   # devices:
    #  - /dev/videoN:/dev/videoN # Mount GPU device 
     ports:
@@ -227,8 +248,13 @@ services:
 
 volumes:
   torrent-downloads:
+  #   driver_opts:
+  #     type: "nfs"
+  #     o: "addr=192.168.178.247,nfsvers=3"
+  #     device: ":/nfs/qbittorren"
   radarr-config:
   sonarr-config:
+  sabnzbd-config:  
   prowlarr-config:
   jellyfin-config:
   qbittorrent-config:
