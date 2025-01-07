@@ -1,5 +1,6 @@
 name: media-stack
 services:
+  
 
   # To use/enable VPN, Run this compose file with --profile=vpn. Its highly recommended to use VPN.
   # vpn:
@@ -53,6 +54,62 @@ services:
     #   # prowlarr ports
     #   - 9696:9696
     # restart: "unless-stopped"
+  ts-jellyfin:
+    profiles: ["vpn", "no-vpn"]
+    container_name: "ts-jellyfin"
+    image: tailscale/tailscale:latest
+    hostname: jellyfin
+    environment:
+      - TS_AUTHKEY=tskey-client-kMToLuN2MZ11CNTRL-QNQAv76x8hhi85kpMsTrehjweFN4ADsoB?ephemeral=false
+      - "TS_EXTRA_ARGS=--advertise-tags=tag:container"
+      - TS_SERVE_CONFIG=/config/jellyfin.json
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_ACCEPT_DNS=true
+    volumes:
+      - ts-state:/var/lib/tailscale
+      - ${PWD}/ts-config:/config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+  #   # dns:
+  #   #   - 100.100.100.100
+  #   #   - 1.1.1.1
+  #   #   - 192.168.178.1
+    ports:
+      - 8096:8096
+      - 7359:7359/udp
+      - 8920:8920
+    restart: unless-stopped      
+
+
+  jellyfin:
+    profiles: ["vpn", "no-vpn"]
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    depends_on:
+      - ts-jellyfin
+    network_mode: service:ts-jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=CET
+    volumes:
+      - ./jellyfin-config:/config
+      - /mnt/qbittorrent:/data
+  # devices:
+   #  - /dev/videoN:/dev/videoN # Mount GPU device 
+
+    # networks:
+    #   - mynetwork   
+    # ports:
+    #   - 8096:8096
+    #   - 7359:7359/udp
+    #   - 8920:8920
+    restart: unless-stopped
+
 
   sabnzbd:
     profiles: ["vpn", "no-vpn"]
@@ -114,6 +171,26 @@ services:
       - 8989:8989
     restart: unless-stopped
 
+  # bazarr:
+  #   image: lscr.io/linuxserver/bazarr:latest
+  #   container_name: bazarr
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=CET
+  #   volumes:
+  #     - bazarr-config:/config
+  #     - /mnt/qbittorrent:/downloads
+  #     # - /mnt/qbittorrent/movies:/movies #optional
+  #     # - /mnt/qbittorrent/tvshows:/tv #optional
+  #   networks:
+  #     mynetwork:
+  #       ipv4_address: 172.21.0.12
+  #   ports:
+  #     - 6767:6767
+  #   restart: unless-stopped
+
+
   prowlarr:
     profiles: ["vpn", "no-vpn"]
     container_name: prowlarr
@@ -148,26 +225,7 @@ services:
       - 5055:5055
     restart: unless-stopped
 
-  jellyfin:
-    profiles: ["vpn", "no-vpn"]
-    image: jellyfin/jellyfin:latest
-    container_name: jellyfin
-    networks:
-      - mynetwork
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=CET
-    volumes:
-      - ./jellyfin-config:/config
-      - /mnt/qbittorrent:/data
-  # devices:
-   #  - /dev/videoN:/dev/videoN # Mount GPU device 
-    ports:
-      - 8096:8096
-      - 7359:7359/udp
-      - 8920:8920
-    restart: unless-stopped
+
   
   # Doc: https://github.com/navilg/cleanmyarr
   # cleanmyarr:
@@ -207,6 +265,8 @@ volumes:
   #     o: "addr=192.168.178.247,nfsvers=3"
   #     device: ":/nfs/qbittorren"
   radarr-config:
+  bazarr-config:
+  ts-state:
   sonarr-config:
   sabnzbd-config:  
   prowlarr-config:
