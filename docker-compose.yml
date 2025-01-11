@@ -1,61 +1,6 @@
 name: media-stack
 services:
   
-
-  # To use/enable VPN, Run this compose file with --profile=vpn. Its highly recommended to use VPN.
-  # vpn:
-  #   ## Read https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers for details on configuring VPN for your service provider.
-  #   profiles: ["vpn"]
-  #   container_name: vpn
-  #   image: qmcgaw/gluetun:v3.39.1
-  #   cap_add:
-  #     - NET_ADMIN
-  #   environment:
-  #     - VPN_SERVICE_PROVIDER=protonvpn # Valid values: nordvpn, expressvpn, protonvpn, surfshark or custom
-  #     - VPN_TYPE=wireguard
-  #     - WIREGUARD_PRIVATE_KEY=gKju2ZmaE1Jl1dxBFVD03ogCmxqH4URExjoPj5s/3U4=
-  #     - SERVER_COUNTRIES=Netherlands
-  #     - FREE_ONLY=on
-
-      # - SERVER_COUNTRIES=Netherlands
-    
-      # - FREE_ONLY=on  # Valid with protonvpn only. Value willbe set "on" if using free subscription provided by protonvpn
-
-      ## Enable below if VPN_SERVICE_PROVIDER=custom
-      # - VPN_TYPE=openvpn # or wireguard. 
-
-      ## If VPN_TYPE is openvpn
-      # - OPENVPN_CUSTOM_CONFIG=/gluetun/custom.conf
-
-      ## If VPN_TYPE is wireguard. Replace below env variables as required.
-      # - VPN_ENDPOINT_IP=212.8.243.68                                              # Replace with your wg endpoint ip or domain
-      # - VPN_ENDPOINT_PORT=51820                                               # Replace with wg server port
-      # - WIREGUARD_PUBLIC_KEY= n4RGP+MGDzRHZ1eoPLQZgpuWxtjnW7qL8qzOP1DRvHo=    # Replace with your wg public key
-         # Replace with your wg client private key
-      # - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=  # Replaced with your wg pre-shared key
-      # - WIREGUARD_ADDRESSES="10.64.222.21/32"                                 # Replace with wg address
-
-    ## Enable volume if VPN_SERVICE_PROVIDER=custom and VPN_TYPE=openvpn is used
-    # volumes:
-      # - /yourpath/yourconfig.conf:/gluetun/config.conf:ro
-
-    # networks:
-    #   - mynetwork
-
-    # devices:
-    #   - /dev/net/tun:/dev/net/tun
-      
-    # Uncomment/enable below ports if VPN is used/enabled
-    # ports:
-    #   # qbittorrent ports
-    #   - 5080:5080
-    #   - 6881:6881
-    #   - 6881:6881/udp
-    #   # prowlarr ports
-    #   - 9696:9696
-    # restart: "unless-stopped"
-  
-    
   tsdproxy:
     image: almeidapaulopt/tsdproxy:latest
     container_name: tsdproxy
@@ -64,7 +9,7 @@ services:
       - tsdproxydata:/data
     environment:
       # Get AuthKey from your Tailscale account
-      - TSDPROXY_AUTHKEY=tskey-auth-kLtF5hFWkL11CNTRL-N62CKSQTYU2vHn9PiWcAS2LTpUYSxFyS7
+      - TSDPROXY_AUTHKEY=tskey-auth-kCkymeh2xG11CNTRL-WRcw7SZecXhJUWqcA61HVhtqXitbDCnej
       # Address of docker server (access to example.com ports)
       - TSDPROXY_HOSTNAME=10.42.37.238
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -201,6 +146,10 @@ services:
     profiles: ["vpn", "no-vpn"]
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
+    labels:
+      tsdproxy.enable: "true"
+      tsdproxy.name: "jellyseer"
+      tsdproxy.funnel: "true"
     networks:
       - mynetwork
     environment:
@@ -212,6 +161,30 @@ services:
     ports:
       - 5055:5055
     restart: unless-stopped
+
+
+volumes:
+  # torrent-downloads:
+  #   driver_opts:
+  #     type: "nfs"
+  #     o: "addr=192.168.178.247,nfsvers=3"
+  #     device: ":/nfs/qbittorren"
+  radarr-config:
+  bazarr-config:
+  ts-state:
+  sonarr-config:
+  sabnzbd-config:  
+  prowlarr-config:
+  # jellyfin-config:
+  qbittorrent-config:
+  jellyseerr-config:
+  tsdproxydata:
+  # cleanmyarr-config:
+
+networks:
+  mynetwork:
+    external: true
+
 
 
   
@@ -246,24 +219,60 @@ services:
     # - CMA_RADARR_ENCODED_API_KEY=${CMA_RADARR_ENCODED_API_KEY:-""}
     # - CMA_RADARR_ENABLE_NOTIFICATION=${CMA_RADARR_ENABLE_NOTIFICATION:-""}
 
-volumes:
-  # torrent-downloads:
-  #   driver_opts:
-  #     type: "nfs"
-  #     o: "addr=192.168.178.247,nfsvers=3"
-  #     device: ":/nfs/qbittorren"
-  radarr-config:
-  bazarr-config:
-  ts-state:
-  sonarr-config:
-  sabnzbd-config:  
-  prowlarr-config:
-  # jellyfin-config:
-  qbittorrent-config:
-  jellyseerr-config:
-  tsdproxydata:
-  # cleanmyarr-config:
 
-networks:
-  mynetwork:
-    external: true
+     
+
+  # To use/enable VPN, Run this compose file with --profile=vpn. Its highly recommended to use VPN.
+  # vpn:
+  #   ## Read https://github.com/qdm12/gluetun-wiki/tree/main/setup/providers for details on configuring VPN for your service provider.
+  #   profiles: ["vpn"]
+  #   container_name: vpn
+  #   image: qmcgaw/gluetun:v3.39.1
+  #   cap_add:
+  #     - NET_ADMIN
+  #   environment:
+  #     - VPN_SERVICE_PROVIDER=protonvpn # Valid values: nordvpn, expressvpn, protonvpn, surfshark or custom
+  #     - VPN_TYPE=wireguard
+  #     - WIREGUARD_PRIVATE_KEY=gKju2ZmaE1Jl1dxBFVD03ogCmxqH4URExjoPj5s/3U4=
+  #     - SERVER_COUNTRIES=Netherlands
+  #     - FREE_ONLY=on
+
+      # - SERVER_COUNTRIES=Netherlands
+    
+      # - FREE_ONLY=on  # Valid with protonvpn only. Value willbe set "on" if using free subscription provided by protonvpn
+
+      ## Enable below if VPN_SERVICE_PROVIDER=custom
+      # - VPN_TYPE=openvpn # or wireguard. 
+
+      ## If VPN_TYPE is openvpn
+      # - OPENVPN_CUSTOM_CONFIG=/gluetun/custom.conf
+
+      ## If VPN_TYPE is wireguard. Replace below env variables as required.
+      # - VPN_ENDPOINT_IP=212.8.243.68                                              # Replace with your wg endpoint ip or domain
+      # - VPN_ENDPOINT_PORT=51820                                               # Replace with wg server port
+      # - WIREGUARD_PUBLIC_KEY= n4RGP+MGDzRHZ1eoPLQZgpuWxtjnW7qL8qzOP1DRvHo=    # Replace with your wg public key
+         # Replace with your wg client private key
+      # - WIREGUARD_PRESHARED_KEY=xOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=  # Replaced with your wg pre-shared key
+      # - WIREGUARD_ADDRESSES="10.64.222.21/32"                                 # Replace with wg address
+
+    ## Enable volume if VPN_SERVICE_PROVIDER=custom and VPN_TYPE=openvpn is used
+    # volumes:
+      # - /yourpath/yourconfig.conf:/gluetun/config.conf:ro
+
+    # networks:
+    #   - mynetwork
+
+    # devices:
+    #   - /dev/net/tun:/dev/net/tun
+      
+    # Uncomment/enable below ports if VPN is used/enabled
+    # ports:
+    #   # qbittorrent ports
+    #   - 5080:5080
+    #   - 6881:6881
+    #   - 6881:6881/udp
+    #   # prowlarr ports
+    #   - 9696:9696
+    # restart: "unless-stopped"
+  
+     

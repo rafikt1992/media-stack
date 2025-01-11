@@ -1,2 +1,3 @@
-./jellyfin-config/*
+jellyfin-config/*
 
+/home/pi/self-host/media-stack/ts-config
