@@ -9,7 +9,7 @@ services:
       - tsdproxydata:/data
     environment:
       # Get AuthKey from your Tailscale account
-      - TSDPROXY_AUTHKEY=tskey-auth-kCkymeh2xG11CNTRL-WRcw7SZecXhJUWqcA61HVhtqXitbDCnej
+      - TSDPROXY_AUTHKEY=tskey-auth-kjiCLyrzu421CNTRL-6V5vcdS9QHQLVrmc3ftkKQ5vpKWAx6gJ
       # Address of docker server (access to example.com ports)
       - TSDPROXY_HOSTNAME=10.42.37.238
       - DOCKER_HOST=unix:///var/run/docker.sock
@@ -22,6 +22,7 @@ services:
     labels:
       tsdproxy.enable: "true"
       tsdproxy.name: "jellyfin"
+      tsdproxy.funnel: "false"
     environment:
       - PUID=1000
       - PGID=1000
